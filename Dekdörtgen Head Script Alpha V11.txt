@@ -1,0 +1,102 @@
+local password = "dikdörtgen head" -- Şifre olarak kullanılacak metin (örnek olarak "dikdörtgen head")
+local isPasswordEntered = false -- Şifre girildiğinde bu değer true olacak
+
+-- Şifre için TextBox oluşturun
+local gui = Instance.new("ScreenGui")
+gui.Name = "SecretGui"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0, 200, 0, 30)
+textBox.Position = UDim2.new(0.5, -100, 0.5, -40) -- Butonu yukarı taşıdık
+textBox.BackgroundTransparency = 0.5
+textBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+textBox.PlaceholderText = "Şifre girin"
+textBox.Parent = gui
+
+local targetPosition = Vector3.new(-1041.0413818359375, 194.44700622558594, 91.44229125976562) -- Belirlediğiniz hedef koordinat
+local basePosition = Vector3.new(-1311.7491455078125, 193.79995727539062, -23.843612670898438) -- Base koordinat
+
+local teleportButton = Instance.new("TextButton")
+teleportButton.Size = UDim2.new(0, 100, 0, 30)
+teleportButton.Position = UDim2.new(0.5, -50, 0.5, 60) -- Butonun yeri değiştirildi, biraz daha altta olacak şekilde ayarlandı
+teleportButton.Text = "Işınlan"
+teleportButton.Visible = false -- Başlangıçta görünmez yapın
+teleportButton.Parent = gui
+
+local teleportToBaseButton = Instance.new("TextButton")
+teleportToBaseButton.Size = UDim2.new(0, 100, 0, 30)
+teleportToBaseButton.Position = UDim2.new(0.5, -50, 0.5, 95) -- Işınlanma butonunun altında olacak şekilde ayarlandı
+teleportToBaseButton.Text = "Baseye Işınlan"
+teleportToBaseButton.Visible = false -- Başlangıçta görünmez yapın
+teleportToBaseButton.Parent = gui
+
+-- Büyük yazı için TextLabel oluşturun
+local bigText = Instance.new("TextLabel")
+bigText.Size = UDim2.new(1, 0, 1, 0)
+bigText.Position = UDim2.new(0, 0, 0, 0)
+bigText.BackgroundTransparency = 1
+bigText.Text = "Hey, bunu nasıl yaptın?"
+bigText.Font = Enum.Font.SourceSansBold
+bigText.TextColor3 = Color3.fromRGB(255, 255, 255)
+bigText.TextScaled = true
+bigText.Visible = false -- Başlangıçta görünmez yapın
+bigText.Parent = gui
+
+-- Şifre girişiyle ilgili işlemleri yapan fonksiyonu oluşturun
+local function onTextBoxFocusLost(enterPressed)
+    if enterPressed then
+        local enteredPassword = textBox.Text
+        if enteredPassword == password then
+            isPasswordEntered = true
+            textBox:Destroy() -- Şifre doğru girildiğinde metin kutusunu silin
+            -- Şifre doğru girildiğinde ışınlanma butonunu ve baseye ışınlanma butonunu gösterin
+            teleportButton.Visible = true
+            teleportToBaseButton.Visible = true
+            bigText.Visible = true -- Büyük yazıyı görünür yapın
+            wait(5) -- 5 saniye bekle
+            bigText.Visible = false -- 5 saniye sonra büyük yazıyı gizleyin
+        else
+            print("Yanlış şifre girdiniz.")
+            textBox.Text = "" -- Yanlış şifre girilirse metin kutusunu temizleyin
+        end
+    end
+end
+
+local function onTeleportButtonClicked()
+    if isPasswordEntered then
+        local character = game.Players.LocalPlayer.Character
+        local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
+            humanoidRootPart.CFrame = CFrame.new(targetPosition)
+        end
+    end
+end
+
+local function onTeleportToBaseButtonClicked()
+    if isPasswordEntered then
+        local character = game.Players.LocalPlayer.Character
+        local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
+            humanoidRootPart.CFrame = CFrame.new(basePosition)
+        end
+    end
+end
+
+-- Etkileşime tepki verecek fonksiyonları bağlayın
+textBox.FocusLost:Connect(onTextBoxFocusLost)
+teleportButton.MouseButton1Click:Connect(onTeleportButtonClicked)
+teleportToBaseButton.MouseButton1Click:Connect(onTeleportToBaseButtonClicked)
+
+-- Karakter respawn olduğunda işlemleri gerçekleştirin
+game.Players.LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    local humanoidRootPart = newCharacter and newCharacter:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        humanoidRootPart.CFrame = CFrame.new(Vector3.new(0, 0, 0)) -- Karakteri başlangıç noktasına taşıyın
+        isPasswordEntered = false -- Karakter respawn olduğunda şifre girildiğini sıfırlayın
+        textBox.Visible = true -- Karakter respawn olduğunda şifre giriş alanını tekrar gösterin
+        teleportButton.Visible = false -- Karakter respawn olduğunda ışınlanma butonunu gizleyin
+        teleportToBaseButton.Visible = false -- Karakter respawn olduğunda baseye ışınlanma butonunu gizleyin
+        bigText.Visible = false -- Karakter respawn olduğunda büyük yazıyı gizleyin
+    end
+end)
